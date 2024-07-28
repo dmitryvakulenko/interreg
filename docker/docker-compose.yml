@@ -1,0 +1,46 @@
+services:
+  logger:
+    image: n0dwis/rust:1.9
+    hostname: logger 
+    security_opt:
+      - seccomp:unconfined
+    volumes:
+      - "../:/app/"
+      - ${SSH_AUTH_SOCK}:/root/ssh.pid
+    working_dir: /app
+    tty: true
+    command: /bin/sh
+    networks:
+      main:
+        aliases:
+          - logger
+  db:
+    image: clickhouse/clickhouse-server:24.6-alpine
+    hostname: clickhouse
+    volumes:
+      - "./data/clickhouse:/var/lib/clickhouse/"
+    environment:
+      CLICKHOUSE_USER: ${R_USER}
+      CLICKHOUSE_PASSWORD: ${R_PASSWORD}
+    networks:
+      main:
+        aliases:
+          - clickhouse
+
+
+  storage:
+    image: bitnami/minio:2024.7.26
+    hostname: minio
+    volumes:
+      - "./data/minio:/bitnami/minio/data"
+    environment:
+      - MINIO_ROOT_USER=${R_USER}
+      - MINIO_ROOT_PASSWORD=${R_PASSWORD}
+    networks:
+      main:
+        aliases:
+          - minio 
+
+networks:
+  main:
+    external: true
